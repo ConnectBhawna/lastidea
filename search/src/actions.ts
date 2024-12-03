@@ -1,5 +1,10 @@
-"use server";
-import { dryrun, message,createDataItemSigner } from "@permaweb/aoconnect";
+import { dryrun, message, createDataItemSigner } from "@permaweb/aoconnect";
+
+declare global {
+  interface Window {
+    arweaveWallet: any;
+  }
+}
 
 export async function performQueryDryrun(query: string) {
   try {
@@ -36,18 +41,23 @@ export async function performQueryDryrun(query: string) {
   }
 }
 
-export async function performIndexMeDryrun(data: string, wallet: string) {
+export async function performIndexMe(data: string) {
   try {
+    console.log("first")
     const result = await message({
       process: "ls75Hu0XXVO4iA5gL4mOFZIa9GiyRaphE-5bsO5rT1k",
-      signer: createDataItemSigner(wallet),
-      data,
+      signer: createDataItemSigner(window.arweaveWallet),
+      tags: [
+        { name: "Action", value: "Index" }
+      ],
+      data:data,
     });
 
-    console.log(result)
+    console.log(result) 
+    
       
   } catch (error) {
-    console.error("Error performing query dryrun:", error);
+    console.error("Error performing message:", error);
     return null;
   }
 }
