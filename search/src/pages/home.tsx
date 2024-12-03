@@ -9,13 +9,12 @@ export default function Home() {
 
   const handleSearch = () => {
     if (query.trim()) {
-      // Navigate to search page with query as a state
       navigate('/search', { state: { query } });
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 bg-gray-50">
+    <div className="flex items-center justify-center min-h-screen px-4 ">
       <div className="w-full max-w-md">
         <h1 className="mb-8 text-3xl font-bold text-center">Project Search</h1>
         <div className="flex">
