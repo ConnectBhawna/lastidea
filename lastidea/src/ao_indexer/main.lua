@@ -115,3 +115,61 @@ end
 msg.reply({Data=json.encode(filteredProjects) , Action="Last.Reply"})
 
 end)
+
+-- Indexing handler
+
+Handlers.add("Index", Handlers.utils.hasMatchingTag("Action", "Index"), function(msg)
+  local newProject = json.decode(msg.Data)
+  
+  -- Validate new project structure
+  if not newProject.title or not newProject.description then
+      msg.reply({
+          Action = "Index.Error",
+          Data = "Invalid project structure"
+      })
+      return
+  end
+  
+  -- Add new project to ReceivedData
+  table.insert(ReceivedData, newProject)
+  
+  msg.reply({
+      Action = "Index.Success",
+      Data = "Project added successfully"
+  })
+end)
+
+
+function paginateResults(projects, page, pageSize)
+  page = page or 1
+  pageSize = pageSize or 10
+  
+  local startIndex = (page - 1) * pageSize + 1
+  local endIndex = math.min(startIndex + pageSize - 1, #projects)
+  
+  local pagedResults = {}
+  for i = startIndex, endIndex do
+      table.insert(pagedResults, projects[i])
+  end
+  
+  return {
+      projects = pagedResults,
+      total = #projects,
+      page = page,
+      pageSize = pageSize
+  }
+end
+
+-- Modify query handler to support pagination
+Handlers.add("Last.Last", Handlers.utils.hasMatchingTag("Action", "Query"), function(msg)
+  local page = tonumber(msg.Page) or 1
+  local pageSize = tonumber(msg.PageSize) or 10
+  
+  local filteredProjects = filterProjects(msg.Data, ReceivedData)
+  local paginatedResults = paginateResults(filteredProjects, page, pageSize)
+  
+  msg.reply({
+      Data = json.encode(paginatedResults),
+      Action = "Last.Reply"
+  })
+end)
