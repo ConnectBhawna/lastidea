@@ -78,6 +78,7 @@ local data = ReceivedData
       -- Check if keyword matches any relevant field in the project
       if project.title and project.title:lower():find(keyword) then found = true end
       if project.description and project.description:lower():find(keyword) then found = true end
+      if project.link and project.link:lower():find(keyword) then found = true end
       if project.tags then
         for _, tag in ipairs(project.tags) do
           if tag:lower():find(keyword) then found = true end
@@ -107,6 +108,8 @@ Handlers.add("Last.Last", Handlers.utils.hasMatchingTag("Action", "Query"),funct
 
 for _, project in ipairs(filteredProjects) do
   print(project.title)
+  print(project.description)
+  print(project.link)
 end
 
 msg.reply({Data=json.encode(filteredProjects) , Action="Last.Reply"})
