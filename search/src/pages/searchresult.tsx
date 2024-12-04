@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { performQueryDryrun } from '../actions';
+import { query } from 'arweave-indexer';
 
 interface Project {
   title: string;
@@ -13,25 +13,29 @@ interface Project {
 export default function SearchPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [query, setQuery] = useState<string>('');
+  
+  // Rename the state variable to avoid conflict with arweave-indexer query
+  const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<Project[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
   // Extract query from location state when page loads
   useEffect(() => {
-    const searchQuery = location.state?.query;
-    if (searchQuery) {
-      setQuery(searchQuery);
-      performSearch(searchQuery);
+    const initialQuery = location.state?.query;
+    if (initialQuery) {
+      setSearchQuery(initialQuery);
+      performSearch(initialQuery);
     }
   }, [location.state]);
 
   const performSearch = async (searchTerm: string) => {
     setLoading(true);
     try {
-      const queryResult = await performQueryDryrun(searchTerm);
-      if (queryResult && Array.isArray(queryResult)) {
-        setResults(queryResult);
+      // Use the actual search query passed to the function
+      const projects = await query(searchTerm);
+      
+      if (projects && Array.isArray(projects)) {
+        setResults(projects);
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -41,9 +45,10 @@ export default function SearchPage() {
   };
 
   const handleSearch = () => {
-    if (query.trim()) {
+    if (searchQuery.trim()) {
       // Update URL and perform search
-      navigate('/search', { state: { query } });
+      navigate('/search', { state: { query: searchQuery } });
+      performSearch(searchQuery);
     }
   };
 
@@ -53,64 +58,52 @@ export default function SearchPage() {
       : desc;
   };
 
-  const goToIndexPage = () => {
-    navigate('/index');
-  };
+  // const goToIndexPage = () => {
+  //   navigate('/index');
+  // };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="flex items-center mb-6">
+    <div className="container p-4 mx-auto">
+      <div className="flex mb-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search projects..."
+          className="flex-grow px-4 py-2 text-black border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+        />
         <button 
-          onClick={goToIndexPage}
-          className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
-          title="Go to Index Page"
+          onClick={handleSearch}
+          className="px-4 py-2 text-white bg-blue-500 rounded-r-md hover:bg-blue-600"
         >
-          indexme
+          <Search className="w-5 h-5" />
         </button>
-        <div className="flex-grow flex">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search projects..."
-            className="flex-grow px-4 py-2 border text-black border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          />
-          <button
-            onClick={handleSearch}
-            className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600 transition-colors flex items-center"
-          >
-            <Search className="mr-2" size={20} />
-            Search
-          </button>
-        </div>
       </div>
 
       {loading ? (
-        <div className="text-center text-gray-600">Loading results...</div>
+        <p>Loading results...</p>
       ) : results.length > 0 ? (
-        <div className="space-y-6">
+        <div className="grid gap-4">
           {results.map((project, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg shadow-md">
-              <h2 className="text-xl text-blue-700 hover:underline">
-                <a href={project.link} target="_blank" rel="noopener noreferrer">
-                  {project.title}
-                </a>
-              </h2>
-              <p className="text-green-700 text-sm mb-2">{project.link}</p>
-              <p className="text-gray-600">
+            <div key={index} className="p-4 border rounded-md">
+              <h3 className="text-lg font-bold">{project.title}</h3>
+              <a href={project.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                {project.link}
+              </a>
+              <p className="mt-2 text-gray-600">
                 {truncateDescription(project.description)}
               </p>
               {project.twitter && (
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="mt-2 text-sm">
                   Twitter: {project.twitter}
                 </p>
               )}
             </div>
           ))}
         </div>
-      ) : query ? (
-        <div className="text-center text-gray-600">No results found</div>
+      ) : searchQuery ? (
+        <p>No results found</p>
       ) : null}
     </div>
   );

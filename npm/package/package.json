@@ -1,0 +1,34 @@
+{
+  "name": "arweave-indexer",
+  "version": "1.0.1",
+  "description": "A lightweight utility for querying and indexing data on the AO network.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "prepare": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rahulsainlll/ao-indexer/npm"
+  },
+  "keywords": [
+    "ao",
+    "arweave",
+    "indexer",
+    "web3"
+  ],
+  "author": "Rahul Sain",
+  "license": "MIT",
+  "dependencies": {
+    "@permaweb/aoconnect": "^0.0.62"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2"
+  }
+}

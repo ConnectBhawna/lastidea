@@ -3,7 +3,9 @@ import {
   ConnectButton,
   useConnection, useActiveAddress
 } from "@arweave-wallet-kit/react";
-import { performIndexMe } from '../actions';
+// import { performIndexMe } from '../actions';
+import { index } from 'arweave-indexer';
+
 
 export default function IndexMe() {
   const { connected } = useConnection();
@@ -44,8 +46,9 @@ export default function IndexMe() {
       // Use the connected wallet address
       console.log(address)
       console.log(dataToSend)
-      const go=await performIndexMe(JSON.stringify(dataToSend));
-      console.log("jooo: "+JSON.stringify(go));
+      // const go=await performIndexMe(JSON.stringify(dataToSend));
+      const result = await index(dataToSend, window.arweaveWallet);
+      console.log("jooo: "+JSON.stringify(result));
       
       // Reset form after successful submission
       setProjectData({
@@ -53,7 +56,7 @@ export default function IndexMe() {
         slug: '',
         description: '',
         link: '',
-        twitter: '',
+        twitter: '',  // Add this line
         tags: ''
       });
 
