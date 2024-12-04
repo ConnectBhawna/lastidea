@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { query } from 'arweave-indexer';
+import { performQueryDryrun } from '../actions';
+
+import Spline from '@splinetool/react-spline';
 
 interface Project {
   title: string;
@@ -11,31 +13,27 @@ interface Project {
 }
 
 export default function SearchPage() {
+
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Rename the state variable to avoid conflict with arweave-indexer query
-  const [searchQuery, setSearchQuery] = useState('');
+  const [query, setQuery] = useState<string>('');
   const [results, setResults] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  // Extract query from location state when page loads
   useEffect(() => {
-    const initialQuery = location.state?.query;
-    if (initialQuery) {
-      setSearchQuery(initialQuery);
-      performSearch(initialQuery);
+    const searchQuery = location.state?.query;
+    if (searchQuery) {
+      setQuery(searchQuery);
+      performSearch(searchQuery);
     }
   }, [location.state]);
 
   const performSearch = async (searchTerm: string) => {
     setLoading(true);
     try {
-      // Use the actual search query passed to the function
-      const projects = await query(searchTerm);
-      
-      if (projects && Array.isArray(projects)) {
-        setResults(projects);
+      const queryResult = await performQueryDryrun(searchTerm);
+      if (queryResult && Array.isArray(queryResult)) {
+        setResults(queryResult);
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -45,10 +43,8 @@ export default function SearchPage() {
   };
 
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      // Update URL and perform search
-      navigate('/search', { state: { query: searchQuery } });
-      performSearch(searchQuery);
+    if (query.trim()) {
+      navigate('/search', { state: { query } });
     }
   };
 
@@ -58,53 +54,92 @@ export default function SearchPage() {
       : desc;
   };
 
-  // const goToIndexPage = () => {
-  //   navigate('/index');
-  // };
+  const goToIndexPage = () => {
+    navigate('/index');
+  };
 
   return (
-    <div className="container p-4 mx-auto">
-      <div className="flex mb-4">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search projects..."
-          className="flex-grow px-4 py-2 text-black border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-        />
-        <button 
-          onClick={handleSearch}
-          className="px-4 py-2 text-white bg-blue-500 rounded-r-md hover:bg-blue-600"
-        >
-          <Search className="w-5 h-5" />
-        </button>
-      </div>
+    <main className='w-full h-screen reletive'>
+      <Spline
+        scene="https://prod.spline.design/FQ5bVLNMRZ3SN87K/scene.splinecode" 
+        className='scale-[100%]'
+      />
 
-      {loading ? (
-        <p>Loading results...</p>
-      ) : results.length > 0 ? (
-        <div className="grid gap-4">
-          {results.map((project, index) => (
-            <div key={index} className="p-4 border rounded-md">
-              <h3 className="text-lg font-bold">{project.title}</h3>
-              <a href={project.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                {project.link}
-              </a>
-              <p className="mt-2 text-gray-600">
-                {truncateDescription(project.description)}
-              </p>
-              {project.twitter && (
-                <p className="mt-2 text-sm">
-                  Twitter: {project.twitter}
-                </p>
-              )}
-            </div>
-          ))}
+     <div className="absolute top-0 left-0 w-full h-screen overflow-hidden bg-">
+      <div className="max-w-4xl px-6 py-8 mx-auto">
+        <div className="flex items-center mb-8 ">
+          <button
+            onClick={goToIndexPage}
+            className="p-4 mr-4 text-sm text-white transition-colors bg-purple-700 rounded-full"
+            title="Go to Index Page"
+          >
+            indexme
+          </button>
+          <div className="flex flex-grow">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search projects..."
+              className="flex-grow px-3 py-3 text-black bg-white border border-gray-300 text-md rounded-l-md focus:outline-none focus:ring-1 focus:ring-purple-500"
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <button
+              onClick={handleSearch}
+              className="bg-purple-600 text-white px-3 py-1.5 text-sm rounded-r-md hover:bg-purple-700 transition-colors flex items-center"
+            >
+              <Search className="mr-1" size={16} />
+              Search
+            </button>
+          </div>
         </div>
-      ) : searchQuery ? (
-        <p>No results found</p>
-      ) : null}
+
+        {loading ? (
+          <div className="text-center text-gray-400">Loading results...</div>
+        ) : results.length > 0 ? (
+          <div className="space-y-6">
+            {results.map((project, index) => (
+              <div key={index} className="w-full h-full p-4 transition-all bg-purple-400 border rounded-md rounded-lg shadow-lg hover:shadow-2xl bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-30">
+                <h2 className="text-xl text-white hover:underline">
+                  <a href={project.link} target="_blank" rel="noopener noreferrer">
+                    {project.title}
+                  </a>
+                </h2>
+                <p className="mb-2 text-sm text-gray-300">{project.link}</p>
+                <p className="text-gray-200">
+                  {truncateDescription(project.description)}
+                </p>
+                {project.twitter && (
+                  <p className="mt-1 text-sm text-gray-400">
+                    Twitter: {project.twitter}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : query ? (
+          <div className="flex justify-center w-full mt-32 text-gray-400">
+            <div className="flex flex-col items-center justify-center w-[80%]">
+              <h1 className="mb-4 text-lg text-center ">
+                Can't find what you're looking for? 🤔 Maybe it's time to index your thoughts 🧠 and dig it out yourself—hehehe! 🔍📚
+              </h1>
+              <button
+                onClick={goToIndexPage}
+                className="p-4 text-sm text-white bg-purple-700 rounded-full hover:shadow-lg hover:bg-purple-800"
+                title="Go to Index Page"
+              >
+                Index Your Project Here!!
+              </button>
+            </div>
+          </div>
+
+
+
+        ) : null}
+      </div>
     </div>
+    </main>
   );
 }
+
+
