@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import {useState} from "react";
 import { Search, LoaderCircleIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import Spline from "@splinetool/react-spline";
 
 export default function Home() {
