@@ -24,7 +24,7 @@ async function searchProjects() {
 ### Indexing Data
 
 ```typescript
-import { index } from 'aarweaveo-indexer';
+import { index } from 'arweave-indexer';
 
 async function indexProject() {
   const result = await index(
