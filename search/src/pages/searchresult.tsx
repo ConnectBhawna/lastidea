@@ -14,6 +14,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "../components/ui/tooltip";
+import { cn } from "../lib/utils";
 
 interface Project {
 	title: string;
@@ -21,6 +22,8 @@ interface Project {
 	description: string;
 	twitter?: string;
 }
+
+type TabType = 'projects' | 'process' | 'images' | 'txn' | 'data';
 
 export default function SearchPage() {
 	const location = useLocation();
@@ -30,6 +33,7 @@ export default function SearchPage() {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [hasSearched, setHasSearched] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+	const [activeTab, setActiveTab] = useState<TabType>('projects');
 
 	useEffect(() => {
 		const urlParams = new URLSearchParams(location.search);
@@ -114,6 +118,33 @@ export default function SearchPage() {
 		</div>
 	);
 
+	const tabs: { label: string; value: TabType }[] = [
+		{ label: 'Projects', value: 'projects' },
+		{ label: 'Process', value: 'process' },
+		{ label: 'Images', value: 'images' },
+		{ label: 'Transactions', value: 'txn' },
+		{ label: 'Data', value: 'data' }
+	];
+
+	const renderTabContent = () => {
+		switch (activeTab) {
+			case 'projects':
+				return (
+					<div className="space-y-6">
+						{results.map((project, index) => (
+							<ProjectCard key={project.link} project={project} index={index}/>
+						))}
+					</div>
+				);
+			default:
+				return (
+					<div className="flex items-center justify-center h-40 text-neutral-400">
+						Coming soon...
+					</div>
+				);
+		}
+	};
+
 	return (
 		<main className="min-h-screen bg-black">
 			<div className="fixed inset-0 z-10 pointer-events-none bg-gradient-to-b from-black/20 to-black" />
@@ -172,11 +203,25 @@ export default function SearchPage() {
 							Loading results...
 						</div>
 					) : results.length > 0 ? (
-						<div className="space-y-6">
-							{results.map((project, index) => (
-								<ProjectCard key={project.link} project={project} index={index}/>
-							))}
-						</div>
+						<>
+							<div className="flex mb-6 space-x-1 border-b border-neutral-800">
+								{tabs.map((tab) => (
+									<button
+										key={tab.value}
+										onClick={() => setActiveTab(tab.value)}
+										className={cn(
+											"px-4 py-2 text-sm font-medium transition-colors rounded-t-lg",
+											activeTab === tab.value
+												? "text-purple-300 bg-neutral-900/50 border-b-2 border-purple-500"
+												: "text-neutral-400 hover:text-neutral-200"
+										)}
+									>
+										{tab.label}
+									</button>
+								))}
+							</div>
+							{renderTabContent()}
+						</>
 					) : (
 						<NoResultsMessage />
 					)}
