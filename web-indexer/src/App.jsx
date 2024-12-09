@@ -2,7 +2,7 @@ import { RecoilRoot } from 'recoil';
 import './App.css'
 import './styles.css'
 import HomePage from './pages/homePage';
-import CustomizationPage from './pages/customizationPaje';
+// import CustomizationPage from './pages/customizationPaje';
 import {BrowserRouter, Route, Routes} from 'react-router-dom'
 import Layout from './pages/layout';
 
