@@ -1,0 +1,97 @@
+name: Protocol Land Sync - All Repos
+on:
+    push:
+        branches:
+            - 'main'
+        paths:
+            - 'web-indexer/**'
+            - 'search/**'
+            - 'npm/**'
+    workflow_dispatch:
+jobs:
+    sync-web-indexer:
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.modified, 'web-indexer/')
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./web-indexer
+        steps:
+            - name: 'Checkout repo (default branch)'
+              uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+            - name: 'Checkout all branches'
+              run: |
+                  default_branch=$(git branch | grep '*' | sed 's/\* //')
+                  for abranch in $(git branch -a | grep -v HEAD | grep remotes | sed "s/remotes\/origin\///g"); do git checkout $abranch ; done
+                  git checkout $default_branch
+                  git branch -a
+            - name: 'Setup node 18'
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 18.x
+            - name: 'Sync repo to Protocol Land'
+              run: npx @protocol.land/sync
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  REPO_TITLE: "web-indexer"
+                  REPO_DESCRIPTION: ${{ github.event.repository.description }}
+                  WALLET: ${{ secrets.WALLET }}
+
+    sync-search:
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.modified, 'search/')
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./search
+        steps:
+            - name: 'Checkout repo (default branch)'
+              uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+            - name: 'Checkout all branches'
+              run: |
+                  default_branch=$(git branch | grep '*' | sed 's/\* //')
+                  for abranch in $(git branch -a | grep -v HEAD | grep remotes | sed "s/remotes\/origin\///g"); do git checkout $abranch ; done
+                  git checkout $default_branch
+                  git branch -a
+            - name: 'Setup node 18'
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 18.x
+            - name: 'Sync repo to Protocol Land'
+              run: npx @protocol.land/sync
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  REPO_TITLE: "search"
+                  REPO_DESCRIPTION: ${{ github.event.repository.description }}
+                  WALLET: ${{ secrets.WALLET }}
+
+    sync-npm:
+        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.modified, 'npm/')
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./npm
+        steps:
+            - name: 'Checkout repo (default branch)'
+              uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+            - name: 'Checkout all branches'
+              run: |
+                  default_branch=$(git branch | grep '*' | sed 's/\* //')
+                  for abranch in $(git branch -a | grep -v HEAD | grep remotes | sed "s/remotes\/origin\///g"); do git checkout $abranch ; done
+                  git checkout $default_branch
+                  git branch -a
+            - name: 'Setup node 18'
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 18.x
+            - name: 'Sync repo to Protocol Land'
+              run: npx @protocol.land/sync
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  REPO_TITLE: "npm"
+                  REPO_DESCRIPTION: ${{ github.event.repository.description }}
+                  WALLET: ${{ secrets.WALLET }}
