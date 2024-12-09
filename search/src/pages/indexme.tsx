@@ -69,7 +69,7 @@ export default function IndexMe() {
     try {
       const dataToSend = {
         ...projectData,
-        link: `https://${projectData.link.replace('https://', '')}_arlink.ar-io.dev`,
+        link: `https://${projectData.link.replace('https://', '')}`,
         twitter: `https://x.com/${projectData.twitter.replace('https://x.com/', '')}`,
       };
 
@@ -154,9 +154,6 @@ export default function IndexMe() {
                   placeholder="yourproject"
                   className="flex-grow px-3 py-2 border rounded-r-lg bg-white/5 border-white/20 focus:outline-none focus:ring-1 focus:ring-white"
                 />
-                <span className="inline-flex items-center px-2 text-sm text-gray-400 border border-l-0 rounded-r-lg bg-white/5 border-white/20">
-                  _arlink.ar-io.dev
-                </span>
               </div>
 
               <div className="flex">
