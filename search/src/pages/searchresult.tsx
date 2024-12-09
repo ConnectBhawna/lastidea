@@ -246,7 +246,14 @@ const ProjectCard = ({
 		<div className="relative p-4 transition-all duration-300 bg-opacity-50 border rounded-lg bg-neutral-900 backdrop-blur-lg border-neutral-700 hover:border-purple-500">
 			<span className="absolute text-6xl font-black right-4 top-2 text-neutral-200/10">{index}</span>
 			<h2 className="mb-1 text-2xl font-semibold text-purple-300">
-				#{project.title}
+				#<a
+					href={project.link}
+					target="_blank"
+					rel="noreferrer"
+					className="transition-colors hover:text-purple-400"
+				>
+					{project.title}
+				</a>
 			</h2>
 			<a
 				href={project.link}
