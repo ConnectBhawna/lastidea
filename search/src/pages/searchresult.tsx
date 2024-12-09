@@ -29,18 +29,35 @@ export default function SearchPage() {
 	const [results, setResults] = useState<Project[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [hasSearched, setHasSearched] = useState<boolean>(false);
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		const searchQuery = location.state?.query;
+		const urlParams = new URLSearchParams(location.search);
+		const urlQuery = urlParams.get('query');
+		const stateQuery = location.state?.query;
+		
+		const searchQuery = urlQuery || stateQuery;
+		
 		if (searchQuery) {
 			setQuery(searchQuery);
 			performSearch(searchQuery);
 		}
-	}, [location.state]);
-
+	}, [location.search, location.state]);
+ 
+	console.log(hasSearched)
+	
 	const performSearch = async (searchTerm: string) => {
 		setLoading(true);
 		setHasSearched(true);
+		setError(null);
+		
+		if (searchTerm.length < 2) {
+			setError("Please enter at least 2 characters to search");
+			setLoading(false);
+			setResults([]);
+			return;
+		}
+
 		try {
 			const queryResult = await performQueryDryrun(searchTerm);
 			if (queryResult && Array.isArray(queryResult)) {
@@ -48,6 +65,8 @@ export default function SearchPage() {
 			}
 		} catch (error) {
 			console.error("Search error:", error);
+			setError("An error occurred while searching. Please try again.");
+			setResults([]);
 		} finally {
 			setLoading(false);
 		}
@@ -55,7 +74,7 @@ export default function SearchPage() {
 
 	const handleSearch = () => {
 		if (query.trim()) {
-			navigate("/search", { state: { query } });
+			navigate(`/search?query=${encodeURIComponent(query)}`);
 			performSearch(query);
 		}
 	};
@@ -70,24 +89,51 @@ export default function SearchPage() {
 		navigate("/index");
 	};
 
-	return (
-		<main className="w-full h-screen bg-black relative">
-			<div className="w-full z-10 h-[100%] absolute touch-none pointer-events-none bg-gradient-to-b from-black/20 to-black top-0 left-0" />
-			<Spline
-				scene="https://prod.spline.design/FQ5bVLNMRZ3SN87K/scene.splinecode"
-				className="scale-[100%]"
-			/>
+	const NoResultsMessage = () => (
+		<div className="flex justify-center w-full mt-32 text-gray-400">
+			<div className="flex flex-col items-center justify-center w-[80%]">
+				{error ? (
+					<h1 className="mb-4 text-lg text-center text-red-400">
+						{error}
+					</h1>
+				) : (
+					<h1 className="mb-4 text-lg text-center">
+						Can't find what you're looking for? 🤔 Maybe it's time to
+						index your thoughts 🧠 and dig it out yourself—hehehe! 🔍📚
+					</h1>
+				)}
+				<button
+					type="button"
+					onClick={goToIndexPage}
+					className="p-4 text-sm text-white bg-purple-700 rounded-full hover:shadow-lg hover:bg-purple-800"
+					aria-label="Go to Index Page"
+				>
+					Index Your Project Here!!
+				</button>
+			</div>
+		</div>
+	);
 
-			<div className="absolute z-20 top-0 left-0 w-full h-screen overflow-hidden bg-">
+	return (
+		<main className="min-h-screen bg-black">
+			<div className="fixed inset-0 z-10 pointer-events-none bg-gradient-to-b from-black/20 to-black" />
+			<div className="fixed inset-0">
+				<Spline
+					scene="https://prod.spline.design/FQ5bVLNMRZ3SN87K/scene.splinecode"
+					className="scale-[100%]"
+				/>
+			</div>
+
+			<div className="relative z-20">
 				<div className="max-w-4xl px-6 py-8 mx-auto">
-					<div className="flex gap-2 items-center mb-8 ">
+					<div className="flex items-center gap-2 mb-8 ">
 						<TooltipProvider delayDuration={0}>
 							<Tooltip>
 								<TooltipTrigger>
 									<button
 										type="button"
 										onClick={goToIndexPage}
-										className="p-2 font-semibold relative text-white transition-colors bg-purple-700 rounded-xl"
+										className="relative p-2 font-semibold text-white transition-colors bg-purple-700 rounded-xl"
 										aria-label="Go to Index Page"
 									>
 										<TableOfContents size={18} />
@@ -98,14 +144,14 @@ export default function SearchPage() {
 								</TooltipContent>
 							</Tooltip>
 						</TooltipProvider>
-						<div className="flex relative flex-grow">
+						<div className="relative flex flex-grow">
 							<input
 								type="text"
 								value={query}
 								onChange={(e) => setQuery(e.target.value)}
 								onKeyPress={handleKeyPress}
 								placeholder="Search projects..."
-								className="flex-grow text-white px-4 py-2 shadow-2xl relative z-10 animate-in fade-in-0 outline-none placeholder-neutral-400 w-full smooth-transition bg-neutral-200 h-full rounded-xl bg-clip-padding backdrop-filter backdrop-blur-md transition-all bg-opacity-10 border-2 border-neutral-700  hover:border-neutral-600 "
+								className="relative z-10 flex-grow w-full h-full px-4 py-2 text-white transition-all border-2 shadow-2xl outline-none animate-in fade-in-0 placeholder-neutral-400 smooth-transition bg-neutral-200 rounded-xl bg-clip-padding backdrop-filter backdrop-blur-md bg-opacity-10 border-neutral-700 hover:border-neutral-600 "
 								aria-label="Search projects"
 							/>
 
@@ -121,8 +167,8 @@ export default function SearchPage() {
 					</div>
 
 					{loading ? (
-						<div className="text-center flex items-center justify-center gap-2 font-semibold text-purple-300">
-							<Loader2Icon className="animate-spin text-purple-300" />
+						<div className="flex items-center justify-center gap-2 font-semibold text-center text-purple-300">
+							<Loader2Icon className="text-purple-300 animate-spin" />
 							Loading results...
 						</div>
 					) : results.length > 0 ? (
@@ -131,24 +177,9 @@ export default function SearchPage() {
 								<ProjectCard key={project.link} project={project} index={index}/>
 							))}
 						</div>
-					) : hasSearched && query ? (
-						<div className="flex justify-center w-full mt-32 text-gray-400">
-							<div className="flex flex-col items-center justify-center w-[80%]">
-								<h1 className="mb-4 text-lg text-center ">
-									Can't find what you're looking for? 🤔 Maybe it's time to
-									index your thoughts 🧠 and dig it out yourself—hehehe! 🔍📚
-								</h1>
-								<button
-									type="button"
-									onClick={goToIndexPage}
-									className="p-4 text-sm text-white bg-purple-700 rounded-full hover:shadow-lg hover:bg-purple-800"
-									aria-label="Go to Index Page"
-								>
-									Index Your Project Here!!
-								</button>
-							</div>
-						</div>
-					) : null}
+					) : (
+						<NoResultsMessage />
+					)}
 				</div>
 			</div>
 		</main>
@@ -167,15 +198,15 @@ const ProjectCard = ({
 			: desc;
 	};
 	return (
-		<div className="bg-neutral-900 relative bg-opacity-50 backdrop-blur-lg rounded-lg p-4 border border-neutral-700 transition-all duration-300 hover:border-purple-500">
-			<span className="text-6xl right-4 top-2 font-black absolute text-neutral-200/10">{index}</span>
-			<h2 className="text-2xl font-semibold text-purple-300 mb-1">
+		<div className="relative p-4 transition-all duration-300 bg-opacity-50 border rounded-lg bg-neutral-900 backdrop-blur-lg border-neutral-700 hover:border-purple-500">
+			<span className="absolute text-6xl font-black right-4 top-2 text-neutral-200/10">{index}</span>
+			<h2 className="mb-1 text-2xl font-semibold text-purple-300">
 				#{project.title}
 			</h2>
 			<a
 				href={project.link}
 				target="_blank"
-				className="text-xs text-neutral-500 hover:text-neutral-400 mb-2 block"
+				className="block mb-2 text-xs text-neutral-500 hover:text-neutral-400"
 				rel="noreferrer"
 			>
 				Link {project.link}
@@ -201,7 +232,7 @@ const ProjectCard = ({
 				<a
 					href={project.twitter}
 					target="_blank"
-					className="text-xs text-neutral-500 hover:text-neutral-400 mt-2 block"
+					className="block mt-2 text-xs text-neutral-500 hover:text-neutral-400"
 					rel="noreferrer"
 				>
 					Link {project.twitter}
