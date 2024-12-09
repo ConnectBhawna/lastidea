@@ -5,7 +5,7 @@ function HeroSection(){
         <div className="flex flex-col items-center justify-center w-full max-w-4xl space-y-6 text-center">
             <div className='absolute left-0 right-0 flex justify-center gap-4 floating-icons top-20'>
                 <span className='icon forward forward-second' style={{padding:"0.4rem 0.7rem"}}><i className="fa-brands fa-github"></i></span>
-                {/* <span className='hidden icon backward backward-first sm:block' style={{padding:"0.3rem .6rem"}}><i className="fa-solid fa-shield"></i></span> */}
+                <span className='hidden icon backward backward-first sm:block' style={{padding:"0.3rem .6rem"}}><i className="fa-solid fa-shield"></i></span>
                 <span className='icon backward backward-second'><i className="fa-solid fa-sliders"></i></span>
             </div>
             
