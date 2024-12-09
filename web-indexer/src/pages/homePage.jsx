@@ -51,7 +51,7 @@ function SubHeading(){
     return <>
         <h4 className="font-light text-lg w-[85%] max-w-xl text-gray-300">
         Indexer is a pre-built component. Install it, customize 
-        prompts, and you're ready to go—no additional coding required.
+        , and you're ready to go—no additional coding required.
         </h4>
     </>
 }
