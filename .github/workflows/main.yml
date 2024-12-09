@@ -8,90 +8,45 @@ on:
             - 'search/**'
             - 'npm/**'
     workflow_dispatch:
+
 jobs:
-    sync-web-indexer:
-        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.modified, 'web-indexer/')
+    sync-all:
         runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: ./web-indexer
+        strategy:
+            matrix:
+                repo: ['web-indexer', 'search', 'npm']
+            fail-fast: false  # Continue with other repos if one fails
+        
         steps:
             - name: 'Checkout repo (default branch)'
               uses: actions/checkout@v3
               with:
                   fetch-depth: 0
-            - name: 'Checkout all branches'
-              run: |
-                  default_branch=$(git branch | grep '*' | sed 's/\* //')
-                  for abranch in $(git branch -a | grep -v HEAD | grep remotes | sed "s/remotes\/origin\///g"); do git checkout $abranch ; done
-                  git checkout $default_branch
-                  git branch -a
-            - name: 'Setup node 18'
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 18.x
-            - name: 'Sync repo to Protocol Land'
-              run: npx @protocol.land/sync
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  REPO_TITLE: "web-indexer"
-                  REPO_DESCRIPTION: ${{ github.event.repository.description }}
-                  WALLET: ${{ secrets.WALLET }}
 
-    sync-search:
-        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.modified, 'search/')
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: ./search
-        steps:
-            - name: 'Checkout repo (default branch)'
-              uses: actions/checkout@v3
-              with:
-                  fetch-depth: 0
-            - name: 'Checkout all branches'
-              run: |
-                  default_branch=$(git branch | grep '*' | sed 's/\* //')
-                  for abranch in $(git branch -a | grep -v HEAD | grep remotes | sed "s/remotes\/origin\///g"); do git checkout $abranch ; done
-                  git checkout $default_branch
-                  git branch -a
             - name: 'Setup node 18'
               uses: actions/setup-node@v3
               with:
                   node-version: 18.x
-            - name: 'Sync repo to Protocol Land'
-              run: npx @protocol.land/sync
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  REPO_TITLE: "search"
-                  REPO_DESCRIPTION: ${{ github.event.repository.description }}
-                  WALLET: ${{ secrets.WALLET }}
+                  cache: 'npm'
 
-    sync-npm:
-        if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.modified, 'npm/')
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: ./npm
-        steps:
-            - name: 'Checkout repo (default branch)'
-              uses: actions/checkout@v3
-              with:
-                  fetch-depth: 0
-            - name: 'Checkout all branches'
+            - name: 'Install Protocol Land Sync'
+              run: npm install -g @protocol.land/sync
+
+            - name: 'Verify Wallet'
               run: |
-                  default_branch=$(git branch | grep '*' | sed 's/\* //')
-                  for abranch in $(git branch -a | grep -v HEAD | grep remotes | sed "s/remotes\/origin\///g"); do git checkout $abranch ; done
-                  git checkout $default_branch
-                  git branch -a
-            - name: 'Setup node 18'
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 18.x
-            - name: 'Sync repo to Protocol Land'
-              run: npx @protocol.land/sync
+                if [ -z "${{ secrets.WALLET }}" ]; then
+                  echo "Error: WALLET secret is not set"
+                  exit 1
+                fi
+
+            - name: 'Sync ${{ matrix.repo }} to Protocol Land'
+              working-directory: ./${{ matrix.repo }}
+              continue-on-error: true  # Don't fail the whole workflow if one sync fails
+              run: |
+                echo "Starting sync for ${{ matrix.repo }}"
+                npx @protocol.land/sync
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  REPO_TITLE: "npm"
-                  REPO_DESCRIPTION: ${{ github.event.repository.description }}
-                  WALLET: ${{ secrets.WALLET }}
+                  REPO_TITLE: ${{ matrix.repo }}
+                  REPO_DESCRIPTION: "Protocol Land sync for ${{ matrix.repo }}"
+                  WALLET: ${{ secrets.WALLET }} 
