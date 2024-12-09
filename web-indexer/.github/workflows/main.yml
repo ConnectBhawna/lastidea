@@ -1,19 +1,21 @@
-name: Protocol Land Sync
+name: Protocol Land Sync - Web Indexer
 on:
-    # Run with every push to 'main' branch:
     push:
         branches:
             - 'main'
-    # Run Manually:
-    #workflow_dispatch:
+        paths:
+            - 'web-indexer/**'
+    workflow_dispatch:
 jobs:
     build:
         runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./web-indexer
         steps:
             - name: 'Checkout repo (default branch)'
               uses: actions/checkout@v3
               with:
-                  # fetch all history for all branches:
                   fetch-depth: 0
             - name: 'Checkout all branches'
               run: |
